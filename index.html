@@ -203,7 +203,7 @@
       <div class="target-card" id="target-card">
         <div class="big-note" id="target-note">D3</div>
         <div class="note-instruction" id="target-inst">Pluck Open 4th String (D)</div>
-        <button class="btn btn-audio" onclick="playCurrentTargetNote()">🔊 Listen to Note</button>
+        <button class="btn btn-audio" onclick="playCurrentTargetNote()">🔊 Listen to Target Note</button>
         <div class="score-badge" id="song-progress">Note 1 of 6</div>
       </div>
     </div>
@@ -338,9 +338,13 @@
       }
     }
 
+    // Web Audio Pluck Tone Generator with Feedback Safeguard
     function playPluckTone(freq) {
       initAudioContext();
       
+      // Mute microphone listener during sound playback to stop loop feedback
+      cooldown = true;
+
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       const filter = audioCtx.createBiquadFilter();
@@ -350,17 +354,22 @@
 
       filter.type = 'lowpass';
       filter.frequency.setValueAtTime(freq * 3, audioCtx.currentTime);
-      filter.frequency.exponentialRampToValueAtTime(freq, audioCtx.currentTime + 0.8);
+      filter.frequency.exponentialRampToValueAtTime(freq, audioCtx.currentTime + 0.6);
 
-      gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+      gain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
 
       osc.connect(filter);
       filter.connect(gain);
       gain.connect(audioCtx.destination);
 
       osc.start();
-      osc.stop(audioCtx.currentTime + 1.2);
+      osc.stop(audioCtx.currentTime + 0.8);
+
+      // Re-enable microphone pitch listener 1.1s later after room reverb subsides
+      setTimeout(() => {
+        cooldown = false;
+      }, 1100);
     }
 
     function playCurrentTargetNote() {
@@ -393,8 +402,6 @@
       document.getElementById('target-inst').innerText = item.inst;
       document.getElementById('song-progress').innerText = `Note ${songStep + 1} of ${currentSong.length}`;
       highlightFret(item.stringIdx, item.fret);
-      
-      if(audioCtx && audioCtx.state === 'running') playPluckTone(item.freq);
     }
 
     function startNinjaSong() {
@@ -417,7 +424,6 @@
         document.getElementById('ninja-inst').innerText = target.inst;
         document.getElementById('ninja-score').innerText = `Score: ${ninjaScore} ⭐ | Challenge Mode`;
         highlightFret(target.stringIdx, target.fret);
-        if(audioCtx && audioCtx.state === 'running') playPluckTone(target.freq);
       } else {
         const track = SONGS[ninjaSongKey];
         const item = track[ninjaStep];
@@ -425,7 +431,6 @@
         document.getElementById('ninja-inst').innerText = item.inst;
         document.getElementById('ninja-score').innerText = `Score: ${ninjaScore} ⭐ | Note ${ninjaStep + 1} of ${track.length}`;
         highlightFret(item.stringIdx, item.fret);
-        if(audioCtx && audioCtx.state === 'running') playPluckTone(item.freq);
       }
     }
 
@@ -454,36 +459,40 @@
       if(!isListening) return;
       const buffer = new Float32Array(analyser.fftSize);
       analyser.getFloatTimeDomainData(buffer);
-      const pitch = autoCorrelate(buffer, audioCtx.sampleRate);
+      
+      // Skip processing if microphone is in cooldown (during synthesized sound playback)
+      if(!cooldown) {
+        const pitch = autoCorrelate(buffer, audioCtx.sampleRate);
 
-      if(pitch !== -1 && !cooldown) {
-        let targetFreq = 0;
-        if(currentMode === 'song') {
-          targetFreq = currentSong[songStep].freq;
-        } else {
-          targetFreq = ninjaSongKey === 'random' ? window.ninjaTarget.freq : SONGS[ninjaSongKey][ninjaStep].freq;
-        }
-        
-        if(Math.abs(pitch - targetFreq) < 6.5) {
-          cooldown = true;
-          const activeCard = currentMode === 'song' ? document.getElementById('target-card') : document.getElementById('ninja-target-card');
-          activeCard.classList.add('pulse-success');
+        if(pitch !== -1) {
+          let targetFreq = 0;
+          if(currentMode === 'song') {
+            targetFreq = currentSong[songStep].freq;
+          } else {
+            targetFreq = ninjaSongKey === 'random' ? window.ninjaTarget.freq : SONGS[ninjaSongKey][ninjaStep].freq;
+          }
           
-          setTimeout(() => {
-            activeCard.classList.remove('pulse-success');
-            if(currentMode === 'song') {
-              songStep = (songStep + 1) % currentSong.length;
-              updateSongUI();
-            } else {
-              ninjaScore += 1;
-              if(ninjaSongKey !== 'random') {
-                const track = SONGS[ninjaSongKey];
-                ninjaStep = (ninjaStep + 1) % track.length;
+          if(Math.abs(pitch - targetFreq) < 6.5) {
+            cooldown = true;
+            const activeCard = currentMode === 'song' ? document.getElementById('target-card') : document.getElementById('ninja-target-card');
+            activeCard.classList.add('pulse-success');
+            
+            setTimeout(() => {
+              activeCard.classList.remove('pulse-success');
+              if(currentMode === 'song') {
+                songStep = (songStep + 1) % currentSong.length;
+                updateSongUI();
+              } else {
+                ninjaScore += 1;
+                if(ninjaSongKey !== 'random') {
+                  const track = SONGS[ninjaSongKey];
+                  ninjaStep = (ninjaStep + 1) % track.length;
+                }
+                updateNinjaUI();
               }
-              updateNinjaUI();
-            }
-            cooldown = false;
-          }, 600);
+              cooldown = false;
+            }, 700);
+          }
         }
       }
       requestAnimationFrame(listen);
