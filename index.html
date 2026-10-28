@@ -174,7 +174,7 @@
 
   <nav>
     <button class="btn active" onclick="switchMode('song')">🎵 Song Practice</button>
-    <button class="btn" onclick="switchMode('ninja')">🥷 String Ninja Game</button>
+    <button class="btn" onclick="switchMode('ninja')">🥷 Ninja Song Play-Along</button>
   </nav>
 
   <div class="container">
@@ -197,7 +197,7 @@
             <option value="twinkle">Twinkle Twinkle Little Star</option>
           </optgroup>
         </select>
-        <button id="mic-btn" class="btn" onclick="toggleMic()">🎤 Start Mic Listener</button>
+        <button id="mic-btn-song" class="btn" onclick="toggleMic()">🎤 Start Mic Listener</button>
       </div>
 
       <div class="target-card" id="target-card">
@@ -211,14 +211,20 @@
     <!-- NINJA GAME MODE -->
     <div id="ninja-view" class="hidden">
       <div class="selector-bar">
-        <h3>Pluck the called string to score stars!</h3>
-        <button class="btn" onclick="toggleMic()">🎤 Start Game Mic</button>
+        <label for="ninja-song-select" style="font-weight:bold;">Choose Song Track:</label>
+        <select id="ninja-song-select" onchange="startNinjaSong()">
+          <option value="sandman">Enter Sandman - Metallica 🎸</option>
+          <option value="enemy">Enemy - Imagine Dragons 🐉</option>
+          <option value="readyforit">...Ready For It? - Taylor Swift ⭐</option>
+          <option value="random">🔀 Random String Challenge</option>
+        </select>
+        <button id="mic-btn-ninja" class="btn" onclick="toggleMic()">🎤 Start Game Mic</button>
       </div>
-      <div class="target-card">
+      <div class="target-card" id="ninja-target-card">
         <div class="big-note" id="ninja-target">G3</div>
-        <div class="note-instruction">Pluck the open 3rd String (G)</div>
-        <button class="btn btn-audio" onclick="playCurrentTargetNote()">🔊 Listen to Note</button>
-        <div class="score-badge" id="ninja-score">Score: 0 ⭐</div>
+        <div class="note-instruction" id="ninja-inst">Pluck Open 3rd String (G)</div>
+        <button class="btn btn-audio" onclick="playCurrentTargetNote()">🔊 Listen to Target Note</button>
+        <div class="score-badge" id="ninja-score">Score: 0 ⭐ | Note 1 of 6</div>
       </div>
     </div>
 
@@ -313,7 +319,11 @@
     let currentMode = 'song';
     let currentSong = [];
     let songStep = 0;
+    
+    let ninjaSongKey = 'sandman';
+    let ninjaStep = 0;
     let ninjaScore = 0;
+
     let audioCtx = null;
     let analyser = null;
     let isListening = false;
@@ -328,7 +338,6 @@
       }
     }
 
-    // Web Audio Pluck Tone Generator
     function playPluckTone(freq) {
       initAudioContext();
       
@@ -339,12 +348,10 @@
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
 
-      // Filter envelope to simulate acoustic string pluck
       filter.type = 'lowpass';
       filter.frequency.setValueAtTime(freq * 3, audioCtx.currentTime);
       filter.frequency.exponentialRampToValueAtTime(freq, audioCtx.currentTime + 0.8);
 
-      // Volume envelope decay
       gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
 
@@ -357,7 +364,9 @@
     }
 
     function playCurrentTargetNote() {
-      let freq = currentMode === 'song' ? currentSong[songStep].freq : window.ninjaTarget.freq;
+      let freq = currentMode === 'song' 
+        ? currentSong[songStep].freq 
+        : (ninjaSongKey === 'random' ? window.ninjaTarget.freq : SONGS[ninjaSongKey][ninjaStep].freq);
       if (freq) playPluckTone(freq);
     }
 
@@ -368,7 +377,7 @@
       document.getElementById('ninja-view').classList.toggle('hidden', mode !== 'ninja');
       
       if(mode === 'song') loadSong();
-      else startNinjaRound();
+      else startNinjaSong();
     }
 
     function loadSong() {
@@ -385,23 +394,39 @@
       document.getElementById('song-progress').innerText = `Note ${songStep + 1} of ${currentSong.length}`;
       highlightFret(item.stringIdx, item.fret);
       
-      // Auto-play pitch preview if audio context is active
       if(audioCtx && audioCtx.state === 'running') playPluckTone(item.freq);
     }
 
-    function startNinjaRound() {
-      const strings = [
-        { note: 'D3', freq: 146.83, s: 0, inst: 'Pluck Open 4th String (D)' },
-        { note: 'G3', freq: 196.00, s: 1, inst: 'Pluck Open 3rd String (G)' },
-        { note: 'B3', freq: 246.94, s: 2, inst: 'Pluck Open 2nd String (B)' },
-        { note: 'E4', freq: 329.63, s: 3, inst: 'Pluck Open 1st String (E)' }
-      ];
-      const target = strings[Math.floor(Math.random() * strings.length)];
-      window.ninjaTarget = target;
-      document.getElementById('ninja-target').innerText = target.note;
-      highlightFret(target.s, 0);
+    function startNinjaSong() {
+      ninjaSongKey = document.getElementById('ninja-song-select').value;
+      ninjaStep = 0;
+      updateNinjaUI();
+    }
 
-      if(audioCtx && audioCtx.state === 'running') playPluckTone(target.freq);
+    function updateNinjaUI() {
+      if(ninjaSongKey === 'random') {
+        const strings = [
+          { note: 'D3', freq: 146.83, stringIdx: 0, fret: 0, inst: 'Pluck Open 4th String (D)' },
+          { note: 'G3', freq: 196.00, stringIdx: 1, fret: 0, inst: 'Pluck Open 3rd String (G)' },
+          { note: 'B3', freq: 246.94, stringIdx: 2, fret: 0, inst: 'Pluck Open 2nd String (B)' },
+          { note: 'E4', freq: 329.63, stringIdx: 3, fret: 0, inst: 'Pluck Open 1st String (E)' }
+        ];
+        const target = strings[Math.floor(Math.random() * strings.length)];
+        window.ninjaTarget = target;
+        document.getElementById('ninja-target').innerText = target.note;
+        document.getElementById('ninja-inst').innerText = target.inst;
+        document.getElementById('ninja-score').innerText = `Score: ${ninjaScore} ⭐ | Challenge Mode`;
+        highlightFret(target.stringIdx, target.fret);
+        if(audioCtx && audioCtx.state === 'running') playPluckTone(target.freq);
+      } else {
+        const track = SONGS[ninjaSongKey];
+        const item = track[ninjaStep];
+        document.getElementById('ninja-target').innerText = item.note;
+        document.getElementById('ninja-inst').innerText = item.inst;
+        document.getElementById('ninja-score').innerText = `Score: ${ninjaScore} ⭐ | Note ${ninjaStep + 1} of ${track.length}`;
+        highlightFret(item.stringIdx, item.fret);
+        if(audioCtx && audioCtx.state === 'running') playPluckTone(item.freq);
+      }
     }
 
     function highlightFret(stringIdx, fretIdx) {
@@ -421,7 +446,7 @@
       source.connect(analyser);
 
       isListening = true;
-      document.querySelectorAll('#mic-btn').forEach(b => b.innerText = "🎤 Listening...");
+      document.querySelectorAll('#mic-btn-song, #mic-btn-ninja').forEach(b => b.innerText = "🎤 Listening...");
       listen();
     }
 
@@ -432,21 +457,30 @@
       const pitch = autoCorrelate(buffer, audioCtx.sampleRate);
 
       if(pitch !== -1 && !cooldown) {
-        let targetFreq = currentMode === 'song' ? currentSong[songStep].freq : window.ninjaTarget.freq;
+        let targetFreq = 0;
+        if(currentMode === 'song') {
+          targetFreq = currentSong[songStep].freq;
+        } else {
+          targetFreq = ninjaSongKey === 'random' ? window.ninjaTarget.freq : SONGS[ninjaSongKey][ninjaStep].freq;
+        }
         
         if(Math.abs(pitch - targetFreq) < 6.5) {
           cooldown = true;
-          document.getElementById('target-card').classList.add('pulse-success');
+          const activeCard = currentMode === 'song' ? document.getElementById('target-card') : document.getElementById('ninja-target-card');
+          activeCard.classList.add('pulse-success');
           
           setTimeout(() => {
-            document.getElementById('target-card').classList.remove('pulse-success');
+            activeCard.classList.remove('pulse-success');
             if(currentMode === 'song') {
               songStep = (songStep + 1) % currentSong.length;
               updateSongUI();
             } else {
               ninjaScore += 1;
-              document.getElementById('ninja-score').innerText = `Score: ${ninjaScore} ⭐`;
-              startNinjaRound();
+              if(ninjaSongKey !== 'random') {
+                const track = SONGS[ninjaSongKey];
+                ninjaStep = (ninjaStep + 1) % track.length;
+              }
+              updateNinjaUI();
             }
             cooldown = false;
           }, 600);
