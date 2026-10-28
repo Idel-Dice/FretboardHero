@@ -98,6 +98,17 @@
                 </button>
             </div>
 
+            <!-- Octave / Pitch Mode Toggle Switch -->
+            <div class="flex items-center gap-2 bg-slate-900/90 p-1.5 rounded-2xl border border-amber-500/30">
+                <span class="text-[11px] font-bold text-slate-400 uppercase px-1">Pitch Range:</span>
+                <button id="octave-low-btn" onclick="setOctaveMode('low')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 shadow-md">
+                    Low Bass (E1)
+                </button>
+                <button id="octave-high-btn" onclick="setOctaveMode('high')" class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-amber-300">
+                    High Octave (E2)
+                </button>
+            </div>
+
             <!-- Mic Connection Toggle -->
             <div class="flex items-center gap-2">
                 <button id="mic-toggle-btn" onclick="toggleMicrophone()" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition flex items-center gap-2">
@@ -112,53 +123,43 @@
 
         <!-- ================= TUNER VIEW ================= -->
         <section id="tuner-view" class="flex flex-col gap-6">
-            <div class="glass-panel p-6 rounded-3xl border border-amber-500/20 flex flex-col items-center justify-center text-center relative overflow-hidden">
-                <h2 class="text-sm font-bold uppercase tracking-wider text-amber-400/80 mb-2">U-Bass Precision Instrument Tuner</h2>
+            <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-amber-500/20 flex flex-col items-center justify-center text-center relative overflow-hidden">
+                <h2 class="text-xs sm:text-sm font-bold uppercase tracking-wider text-amber-400/90 mb-4">U-Bass Precision Instrument Tuner</h2>
                 
-                <!-- Tuner Gauge Circle / Arc visual -->
-                <div class="relative w-64 h-32 my-4 flex justify-center items-end">
-                    <!-- Gauge Background Arc -->
-                    <div class="w-64 h-64 rounded-full border-[12px] border-slate-800 border-t-amber-500/40 border-r-emerald-500/80 border-l-rose-500/80 absolute top-0 transform -rotate-45"></div>
+                <!-- Main Grid Layout to prevent overlap between target text & needle -->
+                <div class="w-full max-w-lg flex flex-col items-center gap-6 my-2">
                     
-                    <!-- Needle -->
-                    <div id="tuner-needle" class="gauge-needle w-1.5 h-28 bg-cyan-400 rounded-full shadow-lg shadow-cyan-400/50 transform rotate-0"></div>
-                    <div class="w-6 h-6 rounded-full bg-slate-200 border-4 border-slate-900 absolute -bottom-1 z-10"></div>
-                </div>
+                    <!-- Target Note & String Header Info -->
+                    <div class="flex flex-col items-center justify-center gap-1">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-widest">Target String & Pitch</span>
+                        <div class="text-6xl sm:text-7xl font-black text-white font-mono-code leading-none drop-shadow-md" id="tuner-target-note">
+                            --
+                        </div>
+                        <div class="text-sm font-mono-code font-bold text-amber-400/90 mt-1" id="tuner-cents-text">-- cents</div>
+                    </div>
 
-                <!-- Cents Offset Indicator -->
-                <div class="text-xs font-mono-code font-bold text-slate-400 mb-2" id="tuner-cents-text">-- cents</div>
+                    <!-- Clean Separated Tuner Gauge Arc & Needle Container -->
+                    <div class="relative w-64 h-36 flex justify-center items-end pt-2 pb-1 overflow-hidden">
+                        <!-- Gauge Background Arc -->
+                        <div class="w-60 h-60 rounded-full border-[12px] border-slate-800 border-t-amber-500/40 border-r-emerald-500/80 border-l-rose-500/80 absolute top-2 transform -rotate-45"></div>
+                        
+                        <!-- Needle -->
+                        <div id="tuner-needle" class="gauge-needle w-1.5 h-24 bg-cyan-400 rounded-full shadow-lg shadow-cyan-400/60 transform rotate-0 z-10"></div>
+                        <div class="w-6 h-6 rounded-full bg-slate-200 border-4 border-slate-900 absolute bottom-1 z-20"></div>
+                    </div>
 
-                <!-- Large Target String & Note Display -->
-                <div class="text-6xl font-black text-white font-mono-code my-1" id="tuner-target-note">
-                    --
-                </div>
-                <div class="text-sm text-slate-300 font-semibold" id="tuner-status-text">
-                    Pluck a string on your U-Bass (E1, A1, D2, G2)
+                    <!-- Status Banner (In-Tune, Flat, Sharp) -->
+                    <div class="w-full bg-slate-900/80 border border-slate-800 px-6 py-3 rounded-2xl flex items-center justify-center min-h-[52px]">
+                        <div class="text-sm sm:text-base text-slate-300 font-semibold tracking-wide" id="tuner-status-text">
+                            Pluck a string on your U-Bass (E, A, D, G)
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- U-Bass String Selection Buttons for Targeted Tuning -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <button onclick="playTargetTone('E1')" class="glass-panel p-4 rounded-2xl flex flex-col items-center justify-center hover:border-amber-500/50 transition">
-                    <span class="text-xs font-bold text-slate-400 uppercase">4th String (Thickest)</span>
-                    <span class="text-2xl font-black text-amber-400 font-mono-code mt-1">E1</span>
-                    <span class="text-[11px] text-slate-500 font-mono-code">41.20 Hz</span>
-                </button>
-                <button onclick="playTargetTone('A1')" class="glass-panel p-4 rounded-2xl flex flex-col items-center justify-center hover:border-amber-500/50 transition">
-                    <span class="text-xs font-bold text-slate-400 uppercase">3rd String</span>
-                    <span class="text-2xl font-black text-amber-400 font-mono-code mt-1">A1</span>
-                    <span class="text-[11px] text-slate-500 font-mono-code">55.00 Hz</span>
-                </button>
-                <button onclick="playTargetTone('D2')" class="glass-panel p-4 rounded-2xl flex flex-col items-center justify-center hover:border-amber-500/50 transition">
-                    <span class="text-xs font-bold text-slate-400 uppercase">2nd String</span>
-                    <span class="text-2xl font-black text-amber-400 font-mono-code mt-1">D2</span>
-                    <span class="text-[11px] text-slate-500 font-mono-code">73.42 Hz</span>
-                </button>
-                <button onclick="playTargetTone('G2')" class="glass-panel p-4 rounded-2xl flex flex-col items-center justify-center hover:border-amber-500/50 transition">
-                    <span class="text-xs font-bold text-slate-400 uppercase">1st String (Thinnest)</span>
-                    <span class="text-2xl font-black text-amber-400 font-mono-code mt-1">G2</span>
-                    <span class="text-[11px] text-slate-500 font-mono-code">98.00 Hz</span>
-                </button>
+            <div id="tuner-string-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Dynamically populated via renderTunerStringButtons() -->
             </div>
         </section>
 
@@ -244,68 +245,78 @@
         // --- CONSTANTS & U-BASS TUNING CONFIG ---
         const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
         
-        // Standard U-Bass Strings: 4=E1 (41.2Hz), 3=A1 (55Hz), 2=D2 (73.42Hz), 1=G2 (98Hz)
-        const UBASS_STRINGS = [
+        // Standard Low Bass Octave Tuning (E1, A1, D2, G2)
+        const UBASS_STRINGS_LOW = [
             { number: 1, name: "G", openPitch: "G2", openFreq: 98.00, midiNote: 43 },
             { number: 2, name: "D", openPitch: "D2", openFreq: 73.42, midiNote: 38 },
             { number: 3, name: "A", openPitch: "A1", openFreq: 55.00, midiNote: 33 },
             { number: 4, name: "E", openPitch: "E1", openFreq: 41.20, midiNote: 28 }
         ];
 
-        // Beginner Songs Sheet Data
+        // High Octave / Uke Pitch Tuning (E2, A2, D3, G3)
+        const UBASS_STRINGS_HIGH = [
+            { number: 1, name: "G", openPitch: "G3", openFreq: 196.00, midiNote: 55 },
+            { number: 2, name: "D", openPitch: "D3", openFreq: 146.83, midiNote: 50 },
+            { number: 3, name: "A", openPitch: "A2", openFreq: 110.00, midiNote: 45 },
+            { number: 4, name: "E", openPitch: "E2", openFreq: 82.41, midiNote: 40 }
+        ];
+
+        // Beginner Songs Sheet Data (base MIDI offset applied dynamically)
         const SONGS = {
             "seven-nation": {
                 title: "Seven Nation Army (Riff)",
                 notes: [
-                    { string: "E", fret: 7, name: "B1", midi: 35 },
-                    { string: "E", fret: 7, name: "B1", midi: 35 },
-                    { string: "E", fret: 10, name: "D2", midi: 38 },
-                    { string: "E", fret: 7, name: "B1", midi: 35 },
-                    { string: "E", fret: 5, name: "A1", midi: 33 },
-                    { string: "E", fret: 3, name: "G1", midi: 31 },
-                    { string: "E", fret: 2, name: "F#1", midi: 30 }
+                    { string: "E", fret: 7, name: "B", midiOffset: 7 },
+                    { string: "E", fret: 7, name: "B", midiOffset: 7 },
+                    { string: "E", fret: 10, name: "D", midiOffset: 10 },
+                    { string: "E", fret: 7, name: "B", midiOffset: 7 },
+                    { string: "E", fret: 5, name: "A", midiOffset: 5 },
+                    { string: "E", fret: 3, name: "G", midiOffset: 3 },
+                    { string: "E", fret: 2, name: "F#", midiOffset: 2 }
                 ]
             },
             "twinkle": {
                 title: "Twinkle Twinkle Little Star",
                 notes: [
-                    { string: "E", fret: 0, name: "E1", midi: 28 },
-                    { string: "E", fret: 0, name: "E1", midi: 28 },
-                    { string: "A", fret: 2, name: "B1", midi: 35 },
-                    { string: "A", fret: 2, name: "B1", midi: 35 },
-                    { string: "D", fret: 0, name: "D2", midi: 38 },
-                    { string: "D", fret: 0, name: "D2", midi: 38 },
-                    { string: "A", fret: 2, name: "B1", midi: 35 }
+                    { string: "E", fret: 0, name: "E", midiOffset: 0 },
+                    { string: "E", fret: 0, name: "E", midiOffset: 0 },
+                    { string: "A", fret: 2, name: "B", midiOffset: 7 },
+                    { string: "A", fret: 2, name: "B", midiOffset: 7 },
+                    { string: "D", fret: 0, name: "D", midiOffset: 10 },
+                    { string: "D", fret: 0, name: "D", midiOffset: 10 },
+                    { string: "A", fret: 2, name: "B", midiOffset: 7 }
                 ]
             },
             "c-scale": {
                 title: "C Major Scale (Bass)",
                 notes: [
-                    { string: "A", fret: 3, name: "C2", midi: 36 },
-                    { string: "D", fret: 0, name: "D2", midi: 38 },
-                    { string: "D", fret: 2, name: "E2", midi: 40 },
-                    { string: "D", fret: 3, name: "F2", midi: 41 },
-                    { string: "G", fret: 0, name: "G2", midi: 43 },
-                    { string: "G", fret: 2, name: "A2", midi: 45 },
-                    { string: "G", fret: 4, name: "B2", midi: 47 },
-                    { string: "G", fret: 5, name: "C3", midi: 48 }
+                    { string: "A", fret: 3, name: "C", midiOffset: 8 },
+                    { string: "D", fret: 0, name: "D", midiOffset: 10 },
+                    { string: "D", fret: 2, name: "E", midiOffset: 12 },
+                    { string: "D", fret: 3, name: "F", midiOffset: 13 },
+                    { string: "G", fret: 0, name: "G", midiOffset: 15 },
+                    { string: "G", fret: 2, name: "A", midiOffset: 17 },
+                    { string: "G", fret: 4, name: "B", midiOffset: 19 },
+                    { string: "G", fret: 5, name: "C", midiOffset: 20 }
                 ]
             },
             "funk-groove": {
                 title: "Beginner Funk Groove",
                 notes: [
-                    { string: "A", fret: 0, name: "A1", midi: 33 },
-                    { string: "A", fret: 3, name: "C2", midi: 36 },
-                    { string: "D", fret: 2, name: "E2", midi: 40 },
-                    { string: "A", fret: 0, name: "A1", midi: 33 },
-                    { string: "G", fret: 0, name: "G2", midi: 43 },
-                    { string: "D", fret: 2, name: "E2", midi: 40 }
+                    { string: "A", fret: 0, name: "A", midiOffset: 5 },
+                    { string: "A", fret: 3, name: "C", midiOffset: 8 },
+                    { string: "D", fret: 2, name: "E", midiOffset: 12 },
+                    { string: "A", fret: 0, name: "A", midiOffset: 5 },
+                    { string: "G", fret: 0, name: "G", midiOffset: 15 },
+                    { string: "D", fret: 2, name: "E", midiOffset: 12 }
                 ]
             }
         };
 
         // --- APP STATE ---
         let currentMode = 'tuner'; // 'tuner' or 'song'
+        let currentOctaveMode = 'low'; // 'low' (E1) or 'high' (E2)
+        let activeStrings = UBASS_STRINGS_LOW;
         let audioCtx = null;
         let isMicActive = false;
         let micStream = null;
@@ -316,6 +327,46 @@
         let currentSongKey = "seven-nation";
         let currentNoteIndex = 0;
         let noteSuccessCooldown = false;
+
+        function setOctaveMode(mode) {
+            currentOctaveMode = mode;
+            activeStrings = mode === 'high' ? UBASS_STRINGS_HIGH : UBASS_STRINGS_LOW;
+
+            document.getElementById('octave-low-btn').className = mode === 'low'
+                ? "px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 shadow-md"
+                : "px-2.5 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-amber-300";
+
+            document.getElementById('octave-high-btn').className = mode === 'high'
+                ? "px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 shadow-md"
+                : "px-2.5 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-amber-300";
+
+            renderTunerStringButtons();
+            if (currentMode === 'song') {
+                renderSongFretboard();
+                updateTargetSongNoteView();
+            }
+        }
+
+        function renderTunerStringButtons() {
+            const grid = document.getElementById('tuner-string-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const stringLabels = ["1st String (Thinnest)", "2nd String", "3rd String", "4th String (Thickest)"];
+            
+            // Render 4th to 1st string
+            [...activeStrings].reverse().forEach((s, idx) => {
+                const btn = document.createElement('button');
+                btn.onclick = () => playTargetTone(s.openPitch);
+                btn.className = "glass-panel p-4 rounded-2xl flex flex-col items-center justify-center hover:border-amber-500/50 transition";
+                btn.innerHTML = `
+                    <span class="text-xs font-bold text-slate-400 uppercase">${stringLabels[idx]}</span>
+                    <span class="text-2xl font-black text-amber-400 font-mono-code mt-1">${s.openPitch}</span>
+                    <span class="text-[11px] text-slate-500 font-mono-code">${s.openFreq.toFixed(2)} Hz</span>
+                `;
+                grid.appendChild(btn);
+            });
+        }
 
         // --- AUDIO SYNTHESIZER ---
         function initAudioContext() {
@@ -453,7 +504,8 @@
             // Process pitch if signal strength is audible
             if (rms > 0.012) {
                 const pitch = detectAutocorrelationPitch(buffer, audioCtx.sampleRate);
-                if (pitch > 35 && pitch < 220) { // U-Bass frequency range
+                // Pitch detector calibrated for U-Bass & Baritone Uke range (20 Hz to 500 Hz)
+                if (pitch > 20 && pitch < 500) {
                     if (currentMode === 'tuner') {
                         updateTunerDisplay(pitch);
                     } else if (currentMode === 'song') {
@@ -465,7 +517,7 @@
             micLoopId = requestAnimationFrame(processAudioStream);
         }
 
-        // Low-frequency calibrated Pitch Detector
+        // Low & High Frequency Calibrated Pitch Detector
         function detectAutocorrelationPitch(buffer, sampleRate) {
             const SIZE = buffer.length;
             let sumOfSquares = 0;
@@ -514,11 +566,11 @@
 
         // --- TUNER DISPLAY LOGIC ---
         function updateTunerDisplay(freq) {
-            // Find closest U-Bass string frequency
-            let closestString = UBASS_STRINGS[0];
-            let minDiff = Math.abs(freq - UBASS_STRINGS[0].openFreq);
+            // Find closest active string frequency
+            let closestString = activeStrings[0];
+            let minDiff = Math.abs(freq - activeStrings[0].openFreq);
 
-            UBASS_STRINGS.forEach(s => {
+            activeStrings.forEach(s => {
                 const diff = Math.abs(freq - s.openFreq);
                 if (diff < minDiff) {
                     minDiff = diff;
@@ -548,7 +600,7 @@
         }
 
         function playTargetTone(pitchName) {
-            const stringObj = UBASS_STRINGS.find(s => s.openPitch === pitchName);
+            const stringObj = activeStrings.find(s => s.openPitch === pitchName);
             if (stringObj) {
                 playBassTone(stringObj.openFreq, 1.5);
                 updateTunerDisplay(stringObj.openFreq);
@@ -556,12 +608,9 @@
         }
 
         // --- SONG PRACTICE & SHEET MUSIC LOGIC ---
-        function loadSelectedSong() {
-            const selectEl = document.getElementById('song-select');
-            currentSongKey = selectEl.value;
-            currentNoteIndex = 0;
-            renderSongNoteStream();
-            updateTargetSongNoteView();
+        function getMidiForNote(note) {
+            const baseMidi = currentOctaveMode === 'high' ? 40 : 28; // E2 vs E1 base
+            return baseMidi + note.midiOffset;
         }
 
         function renderSongNoteStream() {
@@ -575,6 +624,8 @@
                 const notePill = document.createElement('div');
                 const isCurrent = idx === currentNoteIndex;
                 const isPast = idx < currentNoteIndex;
+                const midi = getMidiForNote(note);
+                const octaveNum = Math.floor(midi / 12) - 1;
 
                 notePill.className = `px-4 py-3 rounded-2xl flex flex-col items-center min-w-[70px] transition-all transform ${
                     isCurrent 
@@ -586,7 +637,7 @@
 
                 notePill.innerHTML = `
                     <span class="text-xs font-mono-code">${note.string} String</span>
-                    <span class="text-xl font-black font-mono-code my-0.5">${note.name}</span>
+                    <span class="text-xl font-black font-mono-code my-0.5">${note.name}${octaveNum}</span>
                     <span class="text-[10px] font-mono-code">Fret ${note.fret}</span>
                 `;
 
@@ -597,8 +648,10 @@
         function updateTargetSongNoteView() {
             const song = SONGS[currentSongKey];
             const note = song.notes[currentNoteIndex];
+            const midi = getMidiForNote(note);
+            const octaveNum = Math.floor(midi / 12) - 1;
 
-            document.getElementById('song-note-name').innerText = note.name;
+            document.getElementById('song-note-name').innerText = `${note.name}${octaveNum}`;
             document.getElementById('song-string-fret').innerText = `${note.string} String • Fret ${note.fret}`;
             document.getElementById('song-mic-feedback').innerText = isMicActive 
                 ? "Listening... Pluck this note on your U-Bass!" 
@@ -607,30 +660,11 @@
             highlightFretboardPlacement(note.string, note.fret);
         }
 
-        function advanceSongNote(manual = false) {
-            const song = SONGS[currentSongKey];
-            if (currentNoteIndex < song.notes.length - 1) {
-                currentNoteIndex++;
-                renderSongNoteStream();
-                updateTargetSongNoteView();
-            } else {
-                // Song Completed Celebration
-                document.getElementById('song-note-name').innerText = "🎉 DONE!";
-                document.getElementById('song-string-fret').innerText = "Great Job!";
-                document.getElementById('song-mic-feedback').innerText = "Song Completed! Select another song or restart.";
-            }
-        }
-
-        function resetSongProgress() {
-            currentNoteIndex = 0;
-            renderSongNoteStream();
-            updateTargetSongNoteView();
-        }
-
         function playCurrentSongNoteTone() {
             const song = SONGS[currentSongKey];
             const note = song.notes[currentNoteIndex];
-            const freq = 440 * Math.pow(2, (note.midi - 69) / 12);
+            const midi = getMidiForNote(note);
+            const freq = 440 * Math.pow(2, (midi - 69) / 12);
             playBassTone(freq, 1.2);
         }
 
@@ -639,11 +673,12 @@
 
             const song = SONGS[currentSongKey];
             const targetNote = song.notes[currentNoteIndex];
-            const targetFreq = 440 * Math.pow(2, (targetNote.midi - 69) / 12);
+            const midi = getMidiForNote(targetNote);
+            const targetFreq = 440 * Math.pow(2, (midi - 69) / 12);
 
-            // Allow pitch error tolerance (~4%)
+            // Allow pitch error tolerance (~5%)
             const freqDiff = Math.abs(pitch - targetFreq);
-            if (freqDiff <= targetFreq * 0.04) {
+            if (freqDiff <= targetFreq * 0.05) {
                 // Correct Note Played!
                 noteSuccessCooldown = true;
                 playSuccessSound();
@@ -687,7 +722,7 @@
                 fretCol.appendChild(label);
 
                 // Render 4 Strings (G, D, A, E)
-                UBASS_STRINGS.forEach((stringObj, sIdx) => {
+                activeStrings.forEach((stringObj, sIdx) => {
                     const stringRow = document.createElement('div');
                     stringRow.className = 'relative z-10 w-full flex-1 flex items-center justify-center';
 
@@ -712,7 +747,7 @@
         }
 
         function highlightFretboardPlacement(targetString, targetFret) {
-            UBASS_STRINGS.forEach(s => {
+            activeStrings.forEach(s => {
                 for (let f = 0; f <= 7; f++) {
                     const badge = document.getElementById(`ubass-badge-${s.name}-${f}`);
                     if (!badge) continue;
@@ -729,6 +764,7 @@
         // --- INIT ---
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
+            renderTunerStringButtons();
             switchMode('tuner');
         });
     </script>
