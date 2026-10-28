@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Baritone Uke Academy</title>
+  <title>Baritone Uke Academy 🎸</title>
   <style>
     :root {
       --bg-dark: #0f172a;
@@ -14,6 +14,7 @@
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --pink: #ec4899;
+      --purple: #a855f7;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -44,6 +45,15 @@
       transition: all 0.2s;
     }
     .btn.active, .btn:hover { background: var(--accent); color: #000; }
+    .btn-audio {
+      background: var(--purple);
+      color: #fff;
+      margin-top: 10px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.95rem;
+    }
+    .btn-audio:hover { background: #9333ea; color: #fff; }
 
     .container {
       width: 100%;
@@ -52,9 +62,9 @@
       border-radius: 12px;
       padding: 24px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      position: relative;
     }
 
-    /* Song & Game Selection */
     .selector-bar {
       display: flex;
       justify-content: space-between;
@@ -73,7 +83,7 @@
       font-weight: bold;
     }
 
-    /* Target Display */
+    /* Target Display & Feedback */
     .target-card {
       background: #0f172a;
       border-radius: 12px;
@@ -81,10 +91,22 @@
       text-align: center;
       margin-bottom: 20px;
       border: 2px solid var(--accent);
+      transition: all 0.3s;
     }
-    .big-note { font-size: 3.5rem; font-weight: bold; color: var(--pink); }
-    .note-instruction { font-size: 1.2rem; color: var(--text-main); margin-top: 5px; }
+    .big-note { font-size: 3.8rem; font-weight: bold; color: var(--pink); }
+    .note-instruction { font-size: 1.25rem; color: var(--text-main); margin-top: 5px; }
     .score-badge { font-size: 1.2rem; font-weight: bold; color: var(--accent-success); margin-top: 10px; }
+
+    .pulse-success {
+      animation: pulse 0.5s ease-out;
+      border-color: var(--accent-success) !important;
+      box-shadow: 0 0 20px var(--accent-success);
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
 
     /* Visual Fretboard */
     .fretboard {
@@ -126,13 +148,13 @@
       position: relative;
     }
     .fret-dot {
-      width: 24px;
-      height: 24px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       background: var(--accent-success);
       color: #000;
       font-weight: bold;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       display: none;
       align-items: center;
       justify-content: center;
@@ -140,23 +162,14 @@
     }
     .fret-dot.active { display: flex; }
 
-    .pulse-success {
-      animation: pulse 0.5s ease-out;
-    }
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.08); border-color: var(--accent-success); }
-      100% { transform: scale(1); }
-    }
-
     .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>Baritone Uke Academy 🎶</h1>
-    <p class="subtitle">Play songs & games on your D-G-B-E Baritone Ukulele!</p>
+    <h1>Baritone Uke Academy 🎸</h1>
+    <p class="subtitle">Play Rock, Pop, and Games on your D-G-B-E Ukulele!</p>
   </header>
 
   <nav>
@@ -169,31 +182,42 @@
     <!-- SONG MODE -->
     <div id="song-view">
       <div class="selector-bar">
-        <label for="song-select" style="font-weight:bold;">Choose a Song:</label>
+        <label for="song-select" style="font-weight:bold;">Song & Tier:</label>
         <select id="song-select" onchange="loadSong()">
-          <option value="hotcross">Hot Cross Buns (Easy)</option>
-          <option value="babyshark">Baby Shark (Fun)</option>
-          <option value="twinkle">Twinkle Twinkle Little Star</option>
+          <optgroup label="🟢 Easy Tiers">
+            <option value="sandman">Enter Sandman - Metallica (Easy)</option>
+            <option value="hotcross">Hot Cross Buns (Starter)</option>
+          </optgroup>
+          <optgroup label="🟡 Medium Tiers">
+            <option value="enemy">Enemy - Imagine Dragons (Medium)</option>
+            <option value="babyshark">Baby Shark (Fun)</option>
+          </optgroup>
+          <optgroup label="🔴 Hard Tiers">
+            <option value="readyforit">...Ready For It? - Taylor Swift (Hard)</option>
+            <option value="twinkle">Twinkle Twinkle Little Star</option>
+          </optgroup>
         </select>
         <button id="mic-btn" class="btn" onclick="toggleMic()">🎤 Start Mic Listener</button>
       </div>
 
       <div class="target-card" id="target-card">
-        <div class="big-note" id="target-note">B3</div>
-        <div class="note-instruction" id="target-inst">Play 2nd Fret on G String</div>
-        <div class="score-badge" id="song-progress">Note 1 of 3</div>
+        <div class="big-note" id="target-note">D3</div>
+        <div class="note-instruction" id="target-inst">Pluck Open 4th String (D)</div>
+        <button class="btn btn-audio" onclick="playCurrentTargetNote()">🔊 Listen to Note</button>
+        <div class="score-badge" id="song-progress">Note 1 of 6</div>
       </div>
     </div>
 
     <!-- NINJA GAME MODE -->
     <div id="ninja-view" class="hidden">
       <div class="selector-bar">
-        <h3>Pluck the correct open string when called!</h3>
+        <h3>Pluck the called string to score stars!</h3>
         <button class="btn" onclick="toggleMic()">🎤 Start Game Mic</button>
       </div>
       <div class="target-card">
         <div class="big-note" id="ninja-target">G3</div>
         <div class="note-instruction">Pluck the open 3rd String (G)</div>
+        <button class="btn btn-audio" onclick="playCurrentTargetNote()">🔊 Listen to Note</button>
         <div class="score-badge" id="ninja-score">Score: 0 ⭐</div>
       </div>
     </div>
@@ -243,23 +267,46 @@
 
   <script>
     const SONGS = {
+      sandman: [
+        { note: 'D3', freq: 146.83, stringIdx: 0, fret: 0, inst: 'Open 4th String (D)' },
+        { note: 'E3', freq: 164.81, stringIdx: 0, fret: 2, inst: '2nd Fret on 4th String (D)' },
+        { note: 'G3', freq: 196.00, stringIdx: 1, fret: 0, inst: 'Open 3rd String (G)' },
+        { note: 'B3', freq: 246.94, stringIdx: 2, fret: 0, inst: 'Open 2nd String (B)' },
+        { note: 'A3', freq: 220.00, stringIdx: 1, fret: 2, inst: '2nd Fret on 3rd String (G)' },
+        { note: 'G3', freq: 196.00, stringIdx: 1, fret: 0, inst: 'Open 3rd String (G)' }
+      ],
+      enemy: [
+        { note: 'B3', freq: 246.94, stringIdx: 2, fret: 0, inst: 'Open 2nd String (B)' },
+        { note: 'B3', freq: 246.94, stringIdx: 2, fret: 0, inst: 'Open 2nd String (B)' },
+        { note: 'A3', freq: 220.00, stringIdx: 1, fret: 2, inst: '2nd Fret on 3rd String (G)' },
+        { note: 'G3', freq: 196.00, stringIdx: 1, fret: 0, inst: 'Open 3rd String (G)' },
+        { note: 'A3', freq: 220.00, stringIdx: 1, fret: 2, inst: '2nd Fret on 3rd String (G)' },
+        { note: 'B3', freq: 246.94, stringIdx: 2, fret: 0, inst: 'Open 2nd String (B)' }
+      ],
+      readyforit: [
+        { note: 'E4', freq: 329.63, stringIdx: 3, fret: 0, inst: 'Open 1st String (E)' },
+        { note: 'E4', freq: 329.63, stringIdx: 3, fret: 0, inst: 'Open 1st String (E)' },
+        { note: 'D4', freq: 293.66, stringIdx: 2, fret: 3, inst: '3rd Fret on 2nd String (B)' },
+        { note: 'B3', freq: 246.94, stringIdx: 2, fret: 0, inst: 'Open 2nd String (B)' },
+        { note: 'A3', freq: 220.00, stringIdx: 1, fret: 2, inst: '2nd Fret on 3rd String (G)' },
+        { note: 'G3', freq: 196.00, stringIdx: 1, fret: 0, inst: 'Open 3rd String (G)' }
+      ],
       hotcross: [
-        { note: 'B3', freq: 246.94, stringIdx: 2, fret: 0, inst: 'Pluck Open 2nd String (B)' },
-        { note: 'A3', freq: 220.00, stringIdx: 1, fret: 2, inst: 'Fret 2nd Fret on 3rd String (G)' },
-        { note: 'G3', freq: 196.00, stringIdx: 1, fret: 0, inst: 'Pluck Open 3rd String (G)' }
+        { note: 'B3', freq: 246.94, stringIdx: 2, fret: 0, inst: 'Open 2nd String (B)' },
+        { note: 'A3', freq: 220.00, stringIdx: 1, fret: 2, inst: '2nd Fret on 3rd String (G)' },
+        { note: 'G3', freq: 196.00, stringIdx: 1, fret: 0, inst: 'Open 3rd String (G)' }
       ],
       babyshark: [
-        { note: 'D3', freq: 146.83, stringIdx: 0, fret: 0, inst: 'Pluck Open 4th String (D)' },
-        { note: 'E3', freq: 164.81, stringIdx: 0, fret: 2, inst: 'Fret 2nd Fret on 4th String (D)' },
-        { note: 'G3', freq: 196.00, stringIdx: 1, fret: 0, inst: 'Pluck Open 3rd String (G)' },
-        { note: 'G3', freq: 196.00, stringIdx: 1, fret: 0, inst: 'Pluck Open 3rd String (G)' }
+        { note: 'D3', freq: 146.83, stringIdx: 0, fret: 0, inst: 'Open 4th String (D)' },
+        { note: 'E3', freq: 164.81, stringIdx: 0, fret: 2, inst: '2nd Fret on 4th String (D)' },
+        { note: 'G3', freq: 196.00, stringIdx: 1, fret: 0, inst: 'Open 3rd String (G)' },
+        { note: 'G3', freq: 196.00, stringIdx: 1, fret: 0, inst: 'Open 3rd String (G)' }
       ],
       twinkle: [
         { note: 'D3', freq: 146.83, stringIdx: 0, fret: 0, inst: 'Open 4th String (D)' },
         { note: 'D3', freq: 146.83, stringIdx: 0, fret: 0, inst: 'Open 4th String (D)' },
         { note: 'A3', freq: 220.00, stringIdx: 1, fret: 2, inst: '2nd Fret on 3rd String (G)' },
-        { note: 'A3', freq: 220.00, stringIdx: 1, fret: 2, inst: '2nd Fret on 3rd String (G)' },
-        { note: 'B3', freq: 246.94, stringIdx: 2, fret: 0, inst: 'Open 2nd String (B)' }
+        { note: 'A3', freq: 220.00, stringIdx: 1, fret: 2, inst: '2nd Fret on 3rd String (G)' }
       ]
     };
 
@@ -271,6 +318,48 @@
     let analyser = null;
     let isListening = false;
     let cooldown = false;
+
+    function initAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    // Web Audio Pluck Tone Generator
+    function playPluckTone(freq) {
+      initAudioContext();
+      
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+      // Filter envelope to simulate acoustic string pluck
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(freq * 3, audioCtx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(freq, audioCtx.currentTime + 0.8);
+
+      // Volume envelope decay
+      gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start();
+      osc.stop(audioCtx.currentTime + 1.2);
+    }
+
+    function playCurrentTargetNote() {
+      let freq = currentMode === 'song' ? currentSong[songStep].freq : window.ninjaTarget.freq;
+      if (freq) playPluckTone(freq);
+    }
 
     function switchMode(mode) {
       currentMode = mode;
@@ -295,6 +384,9 @@
       document.getElementById('target-inst').innerText = item.inst;
       document.getElementById('song-progress').innerText = `Note ${songStep + 1} of ${currentSong.length}`;
       highlightFret(item.stringIdx, item.fret);
+      
+      // Auto-play pitch preview if audio context is active
+      if(audioCtx && audioCtx.state === 'running') playPluckTone(item.freq);
     }
 
     function startNinjaRound() {
@@ -308,6 +400,8 @@
       window.ninjaTarget = target;
       document.getElementById('ninja-target').innerText = target.note;
       highlightFret(target.s, 0);
+
+      if(audioCtx && audioCtx.state === 'running') playPluckTone(target.freq);
     }
 
     function highlightFret(stringIdx, fretIdx) {
@@ -317,8 +411,9 @@
     }
 
     async function toggleMic() {
+      initAudioContext();
       if(isListening) return;
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const source = audioCtx.createMediaStreamSource(stream);
       analyser = audioCtx.createAnalyser();
@@ -339,7 +434,7 @@
       if(pitch !== -1 && !cooldown) {
         let targetFreq = currentMode === 'song' ? currentSong[songStep].freq : window.ninjaTarget.freq;
         
-        if(Math.abs(pitch - targetFreq) < 6.0) { // Tolerant threshold for kids
+        if(Math.abs(pitch - targetFreq) < 6.5) {
           cooldown = true;
           document.getElementById('target-card').classList.add('pulse-success');
           
